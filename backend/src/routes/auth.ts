@@ -61,4 +61,14 @@ router.get("/validate-token", verifyToken, (req: Request, res: Response) => {
   res.status(200).send({ userId: req.userId });
 });
 
+router.post("/logout", (req: Request, res: Response) => {
+  res.cookie("auth_token", "", {
+    // it creates an empty auth_token
+    // and the toekn has expired at the time of creation
+    // which means the token is completely invalid and cant be used anymore
+    expires: new Date(0),
+  });
+  res.send();
+});
+
 export default router;
