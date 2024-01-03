@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import userRoutes from "./routes/users";
 import authRoutes from "./routes/auth";
 import cookieParser from "cookie-parser";
+import path from "path";
 
 mongoose.connect(process.env.MONGODB_CONNECTION_STRING as string);
 
@@ -21,9 +22,15 @@ app.use(
   })
 );
 
+// goes to the frontend dist folder (where has compiled frontend static assets)
+// serve those static assets on the root of our URL that the backend runs on
+// --> frontend will also be bundled together into backend,
+// so goes to localhost:7000 after build can also see the frontend
+app.use(express.static(path.join(__dirname, "../../frontend/dist")));
+
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
-app.listen(8000, () => {
-  console.log(`server is running on localhsot:8000`);
+app.listen(7000, () => {
+  console.log(`server is running on localhost:7000`);
 });
