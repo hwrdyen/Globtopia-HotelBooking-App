@@ -1,7 +1,8 @@
 import express, { Request, Response } from "express";
 import multer from "multer";
 import cloudinary from "cloudinary";
-import Hotel, { HotelType } from "../models/hotel";
+import Hotel from "../models/hotel";
+import { HotelType } from "../shared/types";
 import verifyToken from "../middleware/auth";
 import { body } from "express-validator";
 
@@ -16,7 +17,7 @@ const upload = multer({
   },
 });
 
-// /api/my-hotels
+// POST /api/my-hotels
 router.post(
   "/",
   // only logged-in user can create hotels
@@ -82,5 +83,16 @@ router.post(
     }
   }
 );
+
+// GET /api/my-hotels
+router.get("/", verifyToken, async (req: Request, res: Response) => {
+  try {
+    // hotels that are created by the userId (not all created hotels)
+    const hotels = await Hotel.find({ userId: req.userId });
+    res.json(hotels);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching hotels" });
+  }
+});
 
 export default router;
