@@ -40,6 +40,16 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/my-hotels", myHotelRoutes);
 
+// --- make sure not BE request (not api endpoint) goes to FE ---
+// some of the route are behind conditional logic,
+// and wonr be part of the static files (express.static(...))
+// because they are generated at request time
+// ex. our add-hotel is behind confitional logic and is a protected route --> doesnt exist in static files that we deploy at deploy time
+// path="/add-hotel" shows after isLoggedIn, not preexists inside static files
+app.get("*", (req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
+});
+
 app.listen(7000, () => {
   console.log(`server is running on localhost:7000`);
 });
