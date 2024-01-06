@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import userRoutes from "./routes/users";
 import authRoutes from "./routes/auth";
 import myHotelRoutes from "./routes/my-hotels";
+import hotelRoutes from "./routes/hotels";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { v2 as cloudinary } from "cloudinary";
@@ -38,7 +39,10 @@ app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+// only deal with the endpoint of current logged-in user
 app.use("/api/my-hotels", myHotelRoutes);
+// deal with all website visitors
+app.use("/api/hotels", hotelRoutes);
 
 // --- make sure not BE request (not api endpoint) goes to FE ---
 // some of the route are behind conditional logic,
