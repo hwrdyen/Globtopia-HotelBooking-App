@@ -150,7 +150,7 @@ export const searchHotels = async (
   queryParams.append("childCount", searchParams.childCount || "");
   queryParams.append("page", searchParams.page || "");
 
-  // filter
+  // filter & sort
   queryParams.append("maxPrice", searchParams.maxPrice || "");
   queryParams.append("sortOption", searchParams.sortOption || "");
 
