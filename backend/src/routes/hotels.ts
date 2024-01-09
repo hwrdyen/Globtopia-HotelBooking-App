@@ -92,9 +92,9 @@ const constructSearchQuery = (queryParams: any) => {
 
   if (queryParams.facilities) {
     constructedQuery.facilities = {
-      $all: Array.isArray(queryParams.faciliteis)
-        ? queryParams.faciliteis
-        : [queryParams.faciliteis],
+      $all: Array.isArray(queryParams.facilities)
+        ? queryParams.facilities
+        : [queryParams.facilities],
     };
   }
 
