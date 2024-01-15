@@ -1,10 +1,26 @@
 import { RegisterFormData } from "./pages/Register";
 import { SignInFormData } from "./pages/SignIn";
-import { HotelSearchResponse, HotelType } from "../../backend/src/shared/types";
+import {
+  HotelSearchResponse,
+  HotelType,
+  UserType,
+} from "../../backend/src/shared/types";
 
 // for development, we start our BE and FE on separate server (VITE_API_BASE_URL)
 // for production, both BE and FE are bundled together (use "" --> no API_BASE_URL anymore, so just use the same server URL)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
+export const fetchCurrentUser = async (): Promise<UserType> => {
+  const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Error fetching user");
+  }
+
+  return response.json();
+};
 
 export const register = async (formData: RegisterFormData) => {
   const reponse = await fetch(`${API_BASE_URL}/api/users/register`, {
