@@ -6,6 +6,7 @@ import userRoutes from "./routes/users";
 import authRoutes from "./routes/auth";
 import myHotelRoutes from "./routes/my-hotels";
 import hotelRoutes from "./routes/hotels";
+import bookingRoutes from "./routes/my-bookings";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { v2 as cloudinary } from "cloudinary";
@@ -43,6 +44,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/my-hotels", myHotelRoutes);
 // deal with all website visitors
 app.use("/api/hotels", hotelRoutes);
+app.use("/api/my-bookings", bookingRoutes);
 
 // --- make sure not BE request (not api endpoint) goes to FE ---
 // some of the route are behind conditional logic,
