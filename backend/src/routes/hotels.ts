@@ -105,7 +105,7 @@ router.post(
     const totalCost = hotel.pricePerNight * numberOfNights;
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: totalCost,
+      amount: totalCost * 100,
       currency: "cad",
 
       // let us store whatever we want for this payment intent
@@ -169,6 +169,9 @@ router.post(
         { _id: req.params.hotelId },
         {
           $push: { bookings: newBooking },
+        },
+        {
+          new: true,
         }
       );
 

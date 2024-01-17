@@ -12,8 +12,7 @@ type SearchContext = {
     checkIn: Date,
     checkOut: Date,
     adultCount: number,
-    childCount: number,
-    hotelId?: string
+    childCount: number
   ) => void;
 };
 
@@ -55,7 +54,6 @@ export const SearchContextProvider = ({
     childCount: number,
     hotelId?: string
   ) => {
-    // save it to local state
     setDestination(destination);
     setCheckIn(checkIn);
     setCheckOut(checkOut);
@@ -65,7 +63,6 @@ export const SearchContextProvider = ({
       setHotelId(hotelId);
     }
 
-    // save to sessionStorage
     sessionStorage.setItem("destination", destination);
     sessionStorage.setItem("checkIn", checkIn.toISOString());
     sessionStorage.setItem("checkOut", checkOut.toISOString());
