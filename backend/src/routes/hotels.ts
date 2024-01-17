@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import Hotel from "../models/hotel";
-import { HotelSearchResponse } from "../shared/types";
+import { BookingType, HotelSearchResponse } from "../shared/types";
 import { param, validationResult } from "express-validator";
 import Stripe from "stripe";
 import verifyToken from "../middleware/auth";
@@ -61,72 +61,6 @@ router.get("/search", async (req: Request, res: Response) => {
     res.status(500).json({ message: "Something went wrong" });
   }
 });
-
-const constructSearchQuery = (queryParams: any) => {
-  let constructedQuery: any = {};
-  // if any exists, then add the condition into the constructedQuery
-  // --> create a HUGE mongoose filter query that contain every condition
-
-  if (queryParams.destination) {
-    // This is a MongoDB query object that uses the $or operator
-    // he $or operator performs a logical OR operation on an array of conditions.
-    // If any of the conditions are met, the document is considered a match.
-    // ---  this code looks for documents where either the "city" or "country" field matches the provided queryParams.destination ---
-    constructedQuery.$or = [
-      // This condition uses a regular expression (RegExp)
-      // to match documents where the "city" field contains the provided destination
-      // "i" flag makes the match case-insensitive
-      { city: new RegExp(queryParams.destination, "i") },
-      { country: new RegExp(queryParams.destination, "i") },
-    ];
-  }
-
-  if (queryParams.adultCount) {
-    constructedQuery.adultCount = {
-      // $gte: greater or equal than
-      $gte: parseInt(queryParams.adultCount),
-    };
-  }
-
-  if (queryParams.childCount) {
-    constructedQuery.childCount = {
-      // $gte: greater or equal than
-      $gte: parseInt(queryParams.childCount),
-    };
-  }
-
-  if (queryParams.facilities) {
-    constructedQuery.facilities = {
-      $all: Array.isArray(queryParams.facilities)
-        ? queryParams.facilities
-        : [queryParams.facilities],
-    };
-  }
-
-  if (queryParams.types) {
-    constructedQuery.type = {
-      $in: Array.isArray(queryParams.types)
-        ? queryParams.types
-        : [queryParams.types],
-    };
-  }
-
-  if (queryParams.stars) {
-    const starRatings = Array.isArray(queryParams.stars)
-      ? queryParams.stars.map((star: string) => parseInt(star))
-      : parseInt(queryParams.stars);
-
-    constructedQuery.starRating = { $in: starRatings };
-  }
-
-  if (queryParams.maxPrice) {
-    constructedQuery.pricePerNight = {
-      $lte: parseInt(queryParams.maxPrice).toString(),
-    };
-  }
-
-  return constructedQuery;
-};
 
 // Get /api/hotels/:id
 router.get(
@@ -194,5 +128,127 @@ router.post(
     res.send(response);
   }
 );
+
+// POST /api/hotels/:hotelId/bookings
+router.post(
+  "/:hotelId/bookings",
+  verifyToken,
+  async (req: Request, res: Response) => {
+    try {
+      const paymentIntentId = req.body.paymentIntentId;
+
+      const paymentIntent = await stripe.paymentIntents.retrieve(
+        paymentIntentId as string
+      );
+
+      // check if payment intent is valid
+      if (!paymentIntent) {
+        return res.status(400).json({ message: "payment intent not found" });
+      }
+
+      if (
+        paymentIntent.metadata.hotelId !== req.params.hotelId ||
+        paymentIntent.metadata.userId !== req.userId
+      ) {
+        return res.status(400).json({ message: "payment intent mismatch" });
+      }
+
+      if (paymentIntent.status !== "succeeded") {
+        return res.status(400).json({
+          message: `payment intent not succeeded. Status: ${paymentIntent.status}`,
+        });
+      }
+
+      const newBooking: BookingType = {
+        ...req.body,
+        userId: req.userId,
+      };
+
+      // everything is verified, then add the newBooking into the database (corresponding hotel)
+      const hotel = await Hotel.findOneAndUpdate(
+        { _id: req.params.hotelId },
+        {
+          $push: { bookings: newBooking },
+        }
+      );
+
+      if (!hotel) {
+        return res.status(400).json({ message: "hotel not found" });
+      }
+
+      await hotel.save();
+      res.status(200).send();
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "something went wrong" });
+    }
+  }
+);
+
+const constructSearchQuery = (queryParams: any) => {
+  let constructedQuery: any = {};
+  // if any exists, then add the condition into the constructedQuery
+  // --> create a HUGE mongoose filter query that contain every condition
+
+  if (queryParams.destination) {
+    // This is a MongoDB query object that uses the $or operator
+    // he $or operator performs a logical OR operation on an array of conditions.
+    // If any of the conditions are met, the document is considered a match.
+    // ---  this code looks for documents where either the "city" or "country" field matches the provided queryParams.destination ---
+    constructedQuery.$or = [
+      // This condition uses a regular expression (RegExp)
+      // to match documents where the "city" field contains the provided destination
+      // "i" flag makes the match case-insensitive
+      { city: new RegExp(queryParams.destination, "i") },
+      { country: new RegExp(queryParams.destination, "i") },
+    ];
+  }
+
+  if (queryParams.adultCount) {
+    constructedQuery.adultCount = {
+      // $gte: greater or equal than
+      $gte: parseInt(queryParams.adultCount),
+    };
+  }
+
+  if (queryParams.childCount) {
+    constructedQuery.childCount = {
+      // $gte: greater or equal than
+      $gte: parseInt(queryParams.childCount),
+    };
+  }
+
+  if (queryParams.facilities) {
+    constructedQuery.facilities = {
+      $all: Array.isArray(queryParams.facilities)
+        ? queryParams.facilities
+        : [queryParams.facilities],
+    };
+  }
+
+  if (queryParams.types) {
+    constructedQuery.type = {
+      $in: Array.isArray(queryParams.types)
+        ? queryParams.types
+        : [queryParams.types],
+    };
+  }
+
+  if (queryParams.stars) {
+    const starRatings = Array.isArray(queryParams.stars)
+      ? queryParams.stars.map((star: string) => parseInt(star))
+      : parseInt(queryParams.stars);
+
+    constructedQuery.starRating = { $in: starRatings };
+  }
+
+  if (queryParams.maxPrice) {
+    constructedQuery.pricePerNight = {
+      $lte: parseInt(queryParams.maxPrice).toString(),
+    };
+  }
+
+  return constructedQuery;
+};
 
 export default router;
