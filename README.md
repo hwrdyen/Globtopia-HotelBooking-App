@@ -12,7 +12,7 @@ This is an example of  how to install the prerequisite softwares.
   ```
   
 ### Installation
-_Below is an example of how you can install and set up the CribEstate application._
+_Below is an example of how you can install and set up the Globtopia application._
 - To start the front-end
 1. Change to "client" folder
    ```sh
